@@ -1,0 +1,84 @@
+ZOX SERVER SETUP
+
+As per the requirement given i have completed the server setup, below is the description of that setup:
+
+
+I have created a t2.nano instance (ZOX-TEST) on AWS having 500mb RAM and 1 CPU CORE, and for high availabilty and cluster mode i have enabled auto scaling on that instance and applied a policy that when CPU utlization of ZOX-TEST reach 90% of CPU utlization it will launch 1 more instance having the same data as ZOX-TEST and when ever the CPU utlization reaches below 90% it will terminate that instance which is created by auto-scaling group.For traf icc load distribution i have configured a Application load balancer so that traffic should be routed to different instances launced in Auto sacaling group.
+
+I have also configured detailed monitoring on Cloud Watch of that server and configured RAM and CPU alerts on that.Whenever the CPU is above 90% for 2 min it will send us the notification and when ever the RAM utilization is above 80% fro 5 min it will send us the notification.
+
+And to update the existing setup or to make sure that the instance launced in Auto sclaing Group, i have configured Code deploy for that and setup the target as Auto scaling group so whenever a server is launched in that ASG code deploy will automatically run the deployment and will oushed the updated code to that servers also.
+
+Configuration of the above setup:
+
+VPC-SETUP:
+
+    • Firstly i have created a new VPC so as to create my network inside that vpc.
+Vpc created having Ipv4CIDR as 192.168.0.0/16, then created 2 public subnet and a privte subnet having CIDR range of Public-1(192.168.1.0/24), Public-2(192.168.2.0/24) and Private subnet(192.168.3.0/24).
+
+    • I have created a public subnet so that if we need a database it will be creted on taht subnet so that our application will communicate private with that databse.
+    • I have created a IGW for that VPC so that the resource launced in the public subnet should receive incomming traffic and also communicate with internet.
+    • I have creted a custom route table and configured route as 0.0.0.0/0 and set target as IGW(Internet Gateway) and associated both the public subnet it.
+
+This completed my VPC setup.
+
+EC2-SETUP:
+
+    • Launched as EC2 t2.nano server having 500mb RAM and1 CPU core.
+    • Launced that EC2 server in custom VPC.
+    • Security Group restricted having public access on particular ports like SSH.
+    • Attached a Elastic IP to that instance.
+    • Enabled detailed monitoring for CPU and RAM.
+
+
+ELB-SETUP:
+
+    • I have configured Application load balancer for this setup because our setup is auto scalable so the traffic will be routed to all the instance launched.
+    • ELB created in the same default VPC and launced in 2 Avalibily Zones one if on Availibilty zone fail it will receive traffic from other.
+    • ELB will be receiving traffic on port 80 nad 443 and for 443 ihave configured SSL on EC2 server.
+    • ELB health check is configured on default path i.e / .
+		
+
+
+
+CLOUDWATCH CONFIG:
+
+Cloudwatch is AWS monitoring tools used to monitor AWS resoureces.
+
+    • Firstly i have created a SNS topic and suscribed my mail id so the alerts will be mailed to my mail id.
+    • Then configured CPU alerts at 90% for 2 min on that EC2 server.
+    • And for RAM alerts i have to configure custom matrics on cloudwatch so fo that i AWS has script that should be downloaded on EC2-server and i have put that script on cron so that script will run in every 5 min and sebd data to cloudwatch.
+
+CODE-DEPLOY: 
+
+CodeDeploy is a fully managed deployment service that automates software deployments to a variety of compute services such as Amazon EC2.
+
+    • I have configured code deploy fro deployment purpose so when any new server launced by autoscaling group the new code will be deployed to that server.
+    • Created a custom deployment and set EC2 as our compute platform and set Auto scaling group as Enviornment configuration and have set CodeDeployDefault.OneAtATime as my Deployment configuration and have created a IAM role having access to AWS resources on your behalf.
+    • Then i have configuired a AppSec.yml file that define how application will be deployed on Single instance.
+    • Then i have installed AWS cli to my EC2-server and also installed code-deploy agent to that EC2-server i.e ZOX-TEST, after that i have uploaded my code to S3.
+    • After this configuration i can run the deployment. 
+
+
+SCRIPT TO CHECK THE SYSTEM CONFIG:
+
+    • I have created a script which tell us the current architecture, kernal version, Private/Public ip, RAM,CPU and OS release and version name.
+    • I have put this script on my ZOX-TEST server and set a cron of 12 everymidnight which will send the above info to my mail id.
+    • And to check the instnces running i have used a command in script that wil tell the instance id running at that particluar time and will send us the mail when the cron will run.
+
+
+AUTO-SCALING-CONFIGURATION:
+
+Auto scaling is configured so as to make our infra highly scalable depend upon the CPU utilization.
+
+After all the above configiration completed i have taken that server AMI to be used in Auto scaling Group.
+
+    • I have created the AMI of our actual server so that every server launced from ASG will have the same configuration and used that AMI to the luanch configuration of that ASG.
+    • ASG desired capacity is set to 1 so 1 server will always run.
+    • Min and MAX instances is set to 1 and 2.
+    • Auto scaling policy is set as per the CPU utlization of ZOX-TEST server so when ever the CPU is above 90% it will lunch the server and whenever CPU is below 80% it will terminate that launched instance.
+
+
+
+
+
