@@ -25,5 +25,5 @@ CPUCORE=$(lscpu | sed -n 4p)
 echo -e "CPUCORE :" $CPUCORE
 
 #Check OS release Version and name
-OSINFO=$(lsb_release -a | sed -n '3,4p; 5p')
+OSINFO=$(lsb_release -a | sed -n '3,4p')
 echo -e "OSINFO :" $OSINFO
